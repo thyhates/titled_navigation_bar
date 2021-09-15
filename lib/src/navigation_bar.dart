@@ -8,7 +8,6 @@ const double DEFAULT_BAR_HEIGHT = 60;
 
 const double DEFAULT_INDICATOR_HEIGHT = 2;
 
-
 // ignore: must_be_immutable
 class TitledBottomNavigationBar extends StatefulWidget {
   final bool reverse;
@@ -62,7 +61,6 @@ class TitledBottomNavigationBar extends StatefulWidget {
 }
 
 class _TitledBottomNavigationBarState extends State<TitledBottomNavigationBar> {
-
   bool get reverse => widget.reverse;
 
   Curve get curve => widget.curve;
@@ -100,7 +98,7 @@ class _TitledBottomNavigationBarState extends State<TitledBottomNavigationBar> {
       child: Stack(
         children: <Widget>[
           Positioned(
-            top: widget.indicatorHeight,
+            top: 0,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: items.map((item) {
@@ -140,11 +138,42 @@ class _TitledBottomNavigationBarState extends State<TitledBottomNavigationBar> {
   }
 
   Widget _buildIcon(TitledNavigationBarItem item) {
-    return IconTheme(
-      data: IconThemeData(
-        color: reverse ? widget.inactiveColor : activeColor,
-      ),
-      child: item.icon,
+      return Stack(
+      children: [
+        Positioned(
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: IconTheme(
+              data: IconThemeData(
+                color: reverse ? widget.inactiveColor : activeColor,
+              ),
+              child: item.icon,
+            ),
+          ),
+        ),
+       if(item.badge !=null) Positioned(
+          child: Container(
+            decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.all(Radius.circular(20))),
+            child: SizedBox(
+              child: Center(
+                child: Padding(
+                    child: Text(
+                      item.badge!,
+                      style: TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                    padding: const EdgeInsets.all(1)),
+              ),
+              width: 15,
+              height: 15,
+            ),
+          ),
+          right: 0,
+          top: 0,
+        ),
+      ],
     );
   }
 
@@ -171,7 +200,7 @@ class _TitledBottomNavigationBarState extends State<TitledBottomNavigationBar> {
           ),
           AnimatedAlign(
             duration: duration,
-            alignment: isSelected ? Alignment.center : Alignment(0, 5.2),
+            alignment: isSelected ? Alignment.center : Alignment(0, 5),
             child: reverse ? _buildText(item) : _buildIcon(item),
           ),
         ],

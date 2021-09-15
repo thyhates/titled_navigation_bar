@@ -20,10 +20,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<TitledNavigationBarItem> items = [
-    TitledNavigationBarItem(title: Text('Home'), icon: Icon(Icons.home)),
+    TitledNavigationBarItem(title: Text('Home'), icon: Icon(Icons.home),badge: '2'),
     TitledNavigationBarItem(title: Text('Search'), icon: Icon(Icons.search)),
     TitledNavigationBarItem(title: Text('Bag'), icon: Icon(Icons.card_travel)),
-    TitledNavigationBarItem(title: Text('Orders'), icon: Icon(Icons.shopping_cart)),
+    TitledNavigationBarItem(title: Text('Orders'), icon: Icon(Icons.shopping_cart),badge: '1'),
     TitledNavigationBarItem(title: Text('Profile'), icon: Icon(Icons.person_outline)),
   ];
 

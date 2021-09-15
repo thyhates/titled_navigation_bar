@@ -14,10 +14,13 @@ class TitledNavigationBarItem {
   ///
   /// Defaults to [Colors.white].
   final Color backgroundColor;
+  final String? badge;
 
   TitledNavigationBarItem({
     required this.icon,
     required this.title,
+
     this.backgroundColor = Colors.white,
+    this.badge,
   });
 }
