@@ -53,11 +53,12 @@ class _HomePageState extends State<HomePage> {
         height: 60,
         indicatorHeight: 2,
         onTap: (index) => print("Selected Index: $index"),
-        reverse: navBarMode,
+        showIndicator: true,
         curve: Curves.easeInBack,
         items: items,
         activeColor: Colors.red,
         inactiveColor: Colors.blueGrey,
+        animateItem: true,
       ),
     );
   }

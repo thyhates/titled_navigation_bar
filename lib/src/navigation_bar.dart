@@ -10,13 +10,14 @@ const double DEFAULT_INDICATOR_HEIGHT = 2;
 
 // ignore: must_be_immutable
 class TitledBottomNavigationBar extends StatefulWidget {
-  final bool reverse;
   final Curve curve;
   final Color? activeColor;
   final Color? inactiveColor;
   final Color? inactiveStripColor;
   final Color? indicatorColor;
   final bool enableShadow;
+  final bool showIndicator;
+  final bool animateItem;
   int currentIndex;
 
   /// Called when a item is tapped.
@@ -41,7 +42,6 @@ class TitledBottomNavigationBar extends StatefulWidget {
 
   TitledBottomNavigationBar({
     Key? key,
-    this.reverse = false,
     this.curve = Curves.linear,
     required this.onTap,
     required this.items,
@@ -51,6 +51,8 @@ class TitledBottomNavigationBar extends StatefulWidget {
     this.indicatorColor,
     this.enableShadow = true,
     this.currentIndex = 0,
+    this.showIndicator = true,
+    this.animateItem = true,
     this.height = DEFAULT_BAR_HEIGHT,
     this.indicatorHeight = DEFAULT_INDICATOR_HEIGHT,
   })  : assert(items.length >= 2 && items.length <= 5),
@@ -61,15 +63,18 @@ class TitledBottomNavigationBar extends StatefulWidget {
 }
 
 class _TitledBottomNavigationBarState extends State<TitledBottomNavigationBar> {
-  bool get reverse => widget.reverse;
-
   Curve get curve => widget.curve;
+
+  bool get showIndicator => widget.showIndicator;
+
+  bool get animateItem => widget.animateItem;
 
   List<TitledNavigationBarItem> get items => widget.items;
 
   double width = 0;
   Color? activeColor;
   Duration duration = Duration(milliseconds: 270);
+  int touchIndex = -1;
 
   double _getIndicatorPosition(int index) {
     var isLtr = Directionality.of(context) == TextDirection.ltr;
@@ -105,26 +110,36 @@ class _TitledBottomNavigationBarState extends State<TitledBottomNavigationBar> {
                 var index = items.indexOf(item);
                 return GestureDetector(
                   onTap: () => _select(index),
-                  child: _buildItemWidget(item, index == widget.currentIndex),
+                  onTapDown: (TapDownDetails detail) {
+                    touchIndex = index;
+                    setState(() {});
+                  },
+                  onTapUp: (TapUpDetails detail) {
+                    touchIndex = -1;
+                    setState(() {});
+                  },
+                  child: _buildItemWidget(
+                      item, index == widget.currentIndex, index == touchIndex),
                 );
               }).toList(),
             ),
           ),
-          Positioned(
-            top: 0,
-            width: width,
-            child: AnimatedAlign(
-              alignment:
-                  Alignment(_getIndicatorPosition(widget.currentIndex), 0),
-              curve: curve,
-              duration: duration,
-              child: Container(
-                color: widget.indicatorColor ?? activeColor,
-                width: width / items.length,
-                height: widget.indicatorHeight,
+          if (this.showIndicator)
+            Positioned(
+              top: 0,
+              width: width,
+              child: AnimatedAlign(
+                alignment:
+                    Alignment(_getIndicatorPosition(widget.currentIndex), 0),
+                curve: curve,
+                duration: duration,
+                child: Container(
+                  color: widget.indicatorColor ?? activeColor,
+                  width: width / items.length,
+                  height: widget.indicatorHeight,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -137,73 +152,75 @@ class _TitledBottomNavigationBarState extends State<TitledBottomNavigationBar> {
     setState(() {});
   }
 
-  Widget _buildIcon(TitledNavigationBarItem item) {
-      return Stack(
+  Widget _buildIcon(TitledNavigationBarItem item, bool isSelect) {
+    return Stack(
       children: [
         Positioned(
           child: SizedBox(
-            width: 40,
-            height: 40,
+            width: 35,
+            height: 35,
             child: IconTheme(
               data: IconThemeData(
-                color: reverse ? widget.inactiveColor : activeColor,
+                color: isSelect ? activeColor : widget.inactiveColor,
               ),
               child: item.icon,
             ),
           ),
         ),
-       if(item.badge !=null) Positioned(
-          child: Container(
-            decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-            child: SizedBox(
-              child: Center(
-                child: Padding(
-                    child: Text(
-                      item.badge!,
-                      style: TextStyle(fontSize: 12, color: Colors.white),
-                    ),
-                    padding: const EdgeInsets.all(1)),
+        if (item.badge != null)
+          Positioned(
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.all(Radius.circular(20))),
+              child: SizedBox(
+                child: Center(
+                  child: Padding(
+                      child: Text(
+                        item.badge!,
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                      padding: const EdgeInsets.all(1)),
+                ),
+                width: 15,
+                height: 15,
               ),
-              width: 15,
-              height: 15,
             ),
+            right: 0,
+            top: 0,
           ),
-          right: 0,
-          top: 0,
-        ),
       ],
     );
   }
 
-  Widget _buildText(TitledNavigationBarItem item) {
+  Widget _buildText(TitledNavigationBarItem item, bool isSelect) {
     return DefaultTextStyle.merge(
       child: item.title,
-      style: TextStyle(color: reverse ? activeColor : widget.inactiveColor),
+      style: TextStyle(color: isSelect ? activeColor : widget.inactiveColor),
     );
   }
 
-  Widget _buildItemWidget(TitledNavigationBarItem item, bool isSelected) {
-    return Container(
-      color: item.backgroundColor,
-      height: widget.height,
-      width: width / items.length,
-      child: Stack(
-        alignment: AlignmentDirectional.center,
-        children: <Widget>[
-          AnimatedOpacity(
-            opacity: isSelected ? 0.0 : 1.0,
-            duration: duration,
-            curve: curve,
-            child: reverse ? _buildIcon(item) : _buildText(item),
-          ),
-          AnimatedAlign(
-            duration: duration,
-            alignment: isSelected ? Alignment.center : Alignment(0, 5),
-            child: reverse ? _buildText(item) : _buildIcon(item),
-          ),
-        ],
+  Widget _buildItemWidget(
+      TitledNavigationBarItem item, bool isSelected, bool isTouched) {
+    return AnimatedScale(
+      scale: animateItem
+          ? isTouched
+              ? 0.8
+              : 1
+          : 1,
+      duration: const Duration(milliseconds: 200),
+      child: Container(
+        color: item.backgroundColor,
+        height: widget.height,
+        width: width / items.length,
+        child: Column(
+          // alignment: AlignmentDirectional.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            _buildIcon(item, isSelected),
+            _buildText(item, isSelected),
+          ],
+        ),
       ),
     );
   }
